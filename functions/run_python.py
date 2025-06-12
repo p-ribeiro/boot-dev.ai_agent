@@ -30,9 +30,9 @@ def run_python_file(working_directory: str, file_path: str, args=None) -> str:
         
         output = [] 
         if result.stdout:
-            output.append(f"STDOUT:\n{result.stdout.decode()}")
+            output.append(f"STDOUT:\n{result.stdout}")
         if result.stderr:
-            output.append(f"STDERR:\n{result.stderr.decode()}")
+            output.append(f"STDERR:\n{result.stderr}")
         
         if result.returncode != 0:
             output.append(f"Process exited with code {result.returncode}")
@@ -43,7 +43,7 @@ def run_python_file(working_directory: str, file_path: str, args=None) -> str:
         return f'Error: executing Python file: {e}'
 
 schema_run_python_file = types.FunctionDeclaration(
-    name="run_python_files",
+    name="run_python_file",
     description="Executes a Python file within the working directory and returns the output from the interpreter.",
     parameters=types.Schema(
         type=types.Type.OBJECT,

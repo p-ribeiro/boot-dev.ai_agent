@@ -1,7 +1,6 @@
 import os
 from google.genai import types
-
-MAX_CHARS = 10_000
+from config import MAX_CHARS
 
 def get_file_content(working_directory: str, file_path: str) -> str:
     abs_working_dir = os.path.abspath(working_directory)
