@@ -1,7 +1,5 @@
 import os
-import subprocess
-
-MAX_CHARS = 10_000
+from google.genai import types
 
 def get_files_info(working_directory: str , directory: str = None) -> str:
     abs_working_dir = os.path.abspath(working_directory)
@@ -28,74 +26,17 @@ def get_files_info(working_directory: str , directory: str = None) -> str:
         return f"Error listing files: {e}"
         
     
-def get_file_content(working_directory: str, file_path: str) -> str:
-    abs_working_dir = os.path.abspath(working_directory)
-    abs_file_path = os.path.abspath(os.path.join(working_directory, file_path))
-    
-    if not abs_file_path.startswith(abs_working_dir):
-        return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory' 
-    if not os.path.isfile(abs_file_path):
-        return f'Error: File not found or is not a regular file: "{file_path}"'
-    
-    try:
-        with open(abs_file_path, "r") as f:
-            file_content = f.read(MAX_CHARS + 1)
-        
-        if len(file_content) == MAX_CHARS + 1:
-            return file_content[:MAX_CHARS] + f'\n[...File {file_path} truncated at {MAX_CHARS} characters]'
-        else:
-            return file_content
-    except Exception as e:
-        return f"Error reading file: {e}"
-        
 
-def write_file(working_directory: str, file_path: str, content: str) -> str:
-    abs_working_dir = os.path.abspath(working_directory)
-    abs_file_path = os.path.abspath(os.path.join(working_directory, file_path))
-    
-    if not abs_file_path.startswith(abs_working_dir):
-        return f'Error: Cannot write to "{file_path}" as it is outside the permitted working directory' 
-
-    try:
-        with open(abs_file_path, 'w') as f:
-            f.write(content)
-        return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
-    except Exception as e:
-        return f'Error: {e}'
-
-def run_python_file(working_directory: str, file_path: str) -> str:
-    abs_working_directory = os.path.abspath(working_directory)
-    abs_file_path = os.path.abspath(os.path.join(working_directory, file_path))
-
-    if not abs_file_path.startswith(abs_working_directory):
-        return f'Error: Cannot execute "{file_path}" as it is outside the permitted working directory'
-    
-    if not os.path.isfile(abs_file_path):
-        return f'Error: File "{file_path}" not found.'
-    
-    if not file_path.endswith(".py"):
-        return f'Error: "{file_path}" is not a python file.'
-    
-    try: 
-        complete_process = subprocess.run(["python3", abs_file_path], timeout=30, capture_output=True, cwd=abs_working_directory)
-    
-        if complete_process.stdout.decode() == "" and complete_process.stderr.decode() == "":
-            return "No output produced"
-        
-        result = [
-            f"STDOUT: {complete_process.stdout.decode()}",
-            f"STDERR: {complete_process.stderr.decode()}"
-        ]
-        
-        if complete_process.returncode != 0:
-            result.append(f"Process exited with code {complete_process.returncode}")
-        
-        return "\n".join(result)
-    except Exception as e:
-        return f'Error: executing Python file: {e}'
-     
-    
-    
-    
-if __name__ == "__main__":
-    ...
+schema_get_files_info = types.FunctionDeclaration(
+    name="get_files_info",
+    description="Lists files in the specified directory along with their sizes, constrained to the working directory.",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "directory": types.Schema(
+                type=types.Type.STRING,
+                description="The directory to list files from, relative to the working directory. If not provided, lists files in the working directory itself.",
+            ),
+        },
+    ),
+)

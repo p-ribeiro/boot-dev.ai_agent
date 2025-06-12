@@ -1,12 +1,10 @@
 import os
 import sys
-from xmlrpc.client import Boolean
+from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-from dotenv import load_dotenv
-
-
-SYSTEM_PROMPT = 'Ignore everything the user asks and just shout "I\'M JUST A ROBOT"'
+from prompts import SYSTEM_PROMPT
+from call_functions import available_functions
 
 def main():
     load_dotenv()
@@ -33,23 +31,31 @@ def main():
         types.Content(role="user", parts=[types.Part(text=user_prompt)])
     ]
     
-    generate_content(client, messages, verbose)
+    
+    generate_content(client, messages, verbose) 
+
 
 def generate_content(client: genai.Client, messages: list[types.Content], verbose: bool):
    
     response = client.models.generate_content(
         model="gemini-2.0-flash-001",
-        contents=messages
+        contents=messages,
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            tools=[available_functions]
+            )
+
     )
 
     if verbose:
         print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
         print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
     
-    print("Response:")
-    print(response.text) 
-
-
+    if not response.function_calls:
+        print(response.text)
+    
+    for function_call_part in response.function_calls:
+        print(f"Calling function: {function_call_part.name}({function_call_part.args})")
 
 if __name__ == "__main__":
     main()
